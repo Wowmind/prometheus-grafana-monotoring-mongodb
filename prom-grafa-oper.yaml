@@ -1,0 +1,113 @@
+Name:                   prometheus-operator-grafana
+Namespace:              default
+CreationTimestamp:      Fri, 11 Oct 2024 13:58:40 +0100
+Labels:                 app.kubernetes.io/instance=prometheus-operator
+                        app.kubernetes.io/managed-by=Helm
+                        app.kubernetes.io/name=grafana
+                        app.kubernetes.io/version=11.2.1
+                        helm.sh/chart=grafana-8.5.2
+Annotations:            deployment.kubernetes.io/revision: 1
+                        meta.helm.sh/release-name: prometheus-operator
+                        meta.helm.sh/release-namespace: default
+Selector:               app.kubernetes.io/instance=prometheus-operator,app.kubernetes.io/name=grafana
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           app.kubernetes.io/instance=prometheus-operator
+                    app.kubernetes.io/name=grafana
+  Annotations:      checksum/config: 0e9cbd0ea8e24e32f7dfca5bab17a2ba05652642f0a09a4882833ae88e4cc4a3
+                    checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
+                    checksum/secret: 032056e9c62bbe9d1daa41ee49cd3d9524c076f51ca4c65adadf4ef08ef28712
+                    kubectl.kubernetes.io/default-container: grafana
+  Service Account:  prometheus-operator-grafana
+  Containers:
+   grafana-sc-dashboard:
+    Image:           quay.io/kiwigrid/k8s-sidecar:1.27.4
+    Port:            <none>
+    Host Port:       <none>
+    SeccompProfile:  RuntimeDefault
+    Environment:
+      METHOD:        WATCH
+      LABEL:         grafana_dashboard
+      LABEL_VALUE:   1
+      FOLDER:        /tmp/dashboards
+      RESOURCE:      both
+      NAMESPACE:     ALL
+      REQ_USERNAME:  <set to the key 'admin-user' in secret 'prometheus-operator-grafana'>      Optional: false
+      REQ_PASSWORD:  <set to the key 'admin-password' in secret 'prometheus-operator-grafana'>  Optional: false
+      REQ_URL:       http://localhost:3000/api/admin/provisioning/dashboards/reload
+      REQ_METHOD:    POST
+    Mounts:
+      /tmp/dashboards from sc-dashboard-volume (rw)
+   grafana-sc-datasources:
+    Image:           quay.io/kiwigrid/k8s-sidecar:1.27.4
+    Port:            <none>
+    Host Port:       <none>
+    SeccompProfile:  RuntimeDefault
+    Environment:
+      METHOD:        WATCH
+      LABEL:         grafana_datasource
+      LABEL_VALUE:   1
+      FOLDER:        /etc/grafana/provisioning/datasources
+      RESOURCE:      both
+      REQ_USERNAME:  <set to the key 'admin-user' in secret 'prometheus-operator-grafana'>      Optional: false
+      REQ_PASSWORD:  <set to the key 'admin-password' in secret 'prometheus-operator-grafana'>  Optional: false
+      REQ_URL:       http://localhost:3000/api/admin/provisioning/datasources/reload
+      REQ_METHOD:    POST
+    Mounts:
+      /etc/grafana/provisioning/datasources from sc-datasources-volume (rw)
+   grafana:
+    Image:           docker.io/grafana/grafana:11.2.1
+    Ports:           3000/TCP, 9094/TCP, 9094/UDP
+    Host Ports:      0/TCP, 0/TCP, 0/UDP
+    SeccompProfile:  RuntimeDefault
+    Liveness:        http-get http://:3000/api/health delay=60s timeout=30s period=10s #success=1 #failure=10
+    Readiness:       http-get http://:3000/api/health delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      POD_IP:                       (v1:status.podIP)
+      GF_SECURITY_ADMIN_USER:      <set to the key 'admin-user' in secret 'prometheus-operator-grafana'>      Optional: false
+      GF_SECURITY_ADMIN_PASSWORD:  <set to the key 'admin-password' in secret 'prometheus-operator-grafana'>  Optional: false
+      GF_PATHS_DATA:               /var/lib/grafana/
+      GF_PATHS_LOGS:               /var/log/grafana
+      GF_PATHS_PLUGINS:            /var/lib/grafana/plugins
+      GF_PATHS_PROVISIONING:       /etc/grafana/provisioning
+    Mounts:
+      /etc/grafana/grafana.ini from config (rw,path="grafana.ini")
+      /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml from sc-dashboard-provider (rw,path="provider.yaml")
+      /etc/grafana/provisioning/datasources from sc-datasources-volume (rw)
+      /tmp/dashboards from sc-dashboard-volume (rw)
+      /var/lib/grafana from storage (rw)
+  Volumes:
+   config:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      prometheus-operator-grafana
+    Optional:  false
+   storage:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+   sc-dashboard-volume:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+   sc-dashboard-provider:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      prometheus-operator-grafana-config-dashboards
+    Optional:  false
+   sc-datasources-volume:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   prometheus-operator-grafana-5bc6c57bd9 (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  17m   deployment-controller  Scaled up replica set prometheus-operator-grafana-5bc6c57bd9 to 1

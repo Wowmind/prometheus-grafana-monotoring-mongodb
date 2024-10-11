@@ -1,0 +1,75 @@
+Name:                   prometheus-operator-kube-p-operator
+Namespace:              default
+CreationTimestamp:      Fri, 11 Oct 2024 13:58:40 +0100
+Labels:                 app=kube-prometheus-stack-operator
+                        app.kubernetes.io/component=prometheus-operator
+                        app.kubernetes.io/instance=prometheus-operator
+                        app.kubernetes.io/managed-by=Helm
+                        app.kubernetes.io/name=kube-prometheus-stack-prometheus-operator
+                        app.kubernetes.io/part-of=kube-prometheus-stack
+                        app.kubernetes.io/version=65.1.1
+                        chart=kube-prometheus-stack-65.1.1
+                        heritage=Helm
+                        release=prometheus-operator
+Annotations:            deployment.kubernetes.io/revision: 1
+                        meta.helm.sh/release-name: prometheus-operator
+                        meta.helm.sh/release-namespace: default
+Selector:               app=kube-prometheus-stack-operator,release=prometheus-operator
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:           app=kube-prometheus-stack-operator
+                    app.kubernetes.io/component=prometheus-operator
+                    app.kubernetes.io/instance=prometheus-operator
+                    app.kubernetes.io/managed-by=Helm
+                    app.kubernetes.io/name=kube-prometheus-stack-prometheus-operator
+                    app.kubernetes.io/part-of=kube-prometheus-stack
+                    app.kubernetes.io/version=65.1.1
+                    chart=kube-prometheus-stack-65.1.1
+                    heritage=Helm
+                    release=prometheus-operator
+  Service Account:  prometheus-operator-kube-p-operator
+  Containers:
+   kube-prometheus-stack:
+    Image:      quay.io/prometheus-operator/prometheus-operator:v0.77.1
+    Port:       10250/TCP
+    Host Port:  0/TCP
+    Args:
+      --kubelet-service=kube-system/prometheus-operator-kube-p-kubelet
+      --localhost=127.0.0.1
+      --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.77.1
+      --config-reloader-cpu-request=0
+      --config-reloader-cpu-limit=0
+      --config-reloader-memory-request=0
+      --config-reloader-memory-limit=0
+      --thanos-default-base-image=quay.io/thanos/thanos:v0.36.1
+      --secret-field-selector=type!=kubernetes.io/dockercfg,type!=kubernetes.io/service-account-token,type!=helm.sh/release.v1
+      --web.enable-tls=true
+      --web.cert-file=/cert/cert
+      --web.key-file=/cert/key
+      --web.listen-address=:10250
+      --web.tls-min-version=VersionTLS13
+    Liveness:   http-get https://:https/healthz delay=0s timeout=1s period=10s #success=1 #failure=3
+    Readiness:  http-get https://:https/healthz delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      GOGC:  30
+    Mounts:
+      /cert from tls-secret (ro)
+  Volumes:
+   tls-secret:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  prometheus-operator-kube-p-admission
+    Optional:    false
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   prometheus-operator-kube-p-operator-85c7d8cbbd (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  17m   deployment-controller  Scaled up replica set prometheus-operator-kube-p-operator-85c7d8cbbd to 1
